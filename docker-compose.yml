@@ -1,0 +1,17 @@
+version: '3'
+services:
+  notes:
+    container_name: notes
+    build: notes/
+    ports:
+      - "8082:8082"
+  reminder:
+    container_name: reminder
+    build: reminder/
+    ports:
+      - "8081:8081"
+  assistant:
+    container_name: assistant
+    build: assistant-service/
+    ports:
+      - "8080:8080"
