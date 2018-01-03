@@ -7,32 +7,35 @@ import spark.kotlin.*
 import java.time.LocalDateTime
 
 
-private val http: Http = ignite().apply { port(8081) }
-private val objectMapper = ObjectMapper().apply {
-    registerModule(JavaTimeModule())
-    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-}
 
 fun main(args: Array<String>) {
+    val objectMapper = ObjectMapper().apply {
+        registerModule(JavaTimeModule())
+        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+    }
     ReminderInMemoryDb.addReminder(Reminder(null, "Initial reminder", LocalDateTime.now()))
 
-    http.get("/reminder") {
-        response.type("application/json")
-        objectMapper.writeValueAsString(ReminderInMemoryDb.fetchAll().values)
-    }
+    ignite().apply {
+        port(8081)
 
-    http.post("/reminder") {
-        val body: String = request.body()
-        val reminder: Reminder = objectMapper.readValue(body, Reminder::class.java)
-        ReminderInMemoryDb.addReminder(reminder)
-    }
+        get("/reminder") {
+            response.type("application/json")
+            objectMapper.writeValueAsString(ReminderInMemoryDb.fetchAll().values)
+        }
 
-    http.get("/reminder/:id") {
-        response.type("application/json")
-        objectMapper.writeValueAsString(ReminderInMemoryDb.fetchReminder(request.params(":id").toInt()))
-    }
+        post("/reminder") {
+            val body: String = request.body()
+            val reminder: Reminder = objectMapper.readValue(body, Reminder::class.java)
+            ReminderInMemoryDb.addReminder(reminder)
+        }
 
-    http.delete("/reminder/:id") {
-        ReminderInMemoryDb.deleteReminder(request.params(":id").toInt())
+        get("/reminder/:id") {
+            response.type("application/json")
+            objectMapper.writeValueAsString(ReminderInMemoryDb.fetchReminder(request.params(":id").toInt()))
+        }
+
+        delete("/reminder/:id") {
+            ReminderInMemoryDb.deleteReminder(request.params(":id").toInt())
+        }
     }
 }

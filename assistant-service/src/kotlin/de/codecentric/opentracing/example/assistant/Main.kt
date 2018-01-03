@@ -9,7 +9,6 @@ import spark.kotlin.*
 
 private var noteHost = ""
 private var reminderHost = ""
-private val http: Http = ignite().apply { port(8080) }
 private val objectMapper = ObjectMapper().apply {
     registerModule(JavaTimeModule())
     configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
@@ -19,9 +18,13 @@ fun main(args: Array<String>) {
     reminderHost = args[0]
     noteHost = args[1]
 
-    http.get("/") {
-        response.type("application/json")
-        objectMapper.writeValueAsString(AssistantFolder(ReminderService.fetchAll(), NotesService.fetchAll()))
+    ignite().apply {
+        port(8080)
+
+        get("/") {
+            response.type("application/json")
+            objectMapper.writeValueAsString(AssistantFolder(ReminderService.fetchAll(), NotesService.fetchAll()))
+        }
     }
 }
 
