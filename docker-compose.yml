@@ -15,3 +15,13 @@ services:
     build: assistant-service/
     ports:
       - "8080:8080"
+  jaeger:
+    container_name: jaeger
+    image: jaegertracing/all-in-one:1.0.0
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "9411:9411"
