@@ -6,6 +6,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.uber.jaeger.Configuration
 import de.codecentric.opentracing.example.notes.Note
 import io.opentracing.Span
+import io.opentracing.propagation.Format
+import io.opentracing.propagation.TextMapInjectAdapter
 import io.opentracing.util.GlobalTracer
 import khttp.get
 import org.slf4j.LoggerFactory
@@ -44,31 +46,68 @@ fun main(args: Array<String>) {
         port(8080)
 
         get("/") {
-            val span: Span = tracer.buildSpan("fetch all notes and reminders")
-                    .withTag("service", "assistant")
-                    .startManual()
-
             response.type("application/json")
-            val notesAsJsonString: String = objectMapper.writeValueAsString(AssistantFolder(ReminderService.fetchAll(), NotesService.fetchAll()))
 
-            span.finish()
+            val fetchAllSpan: Span = tracer.buildSpan("fetch all")
+                    .withTag("application", "assistant")
+                    .withTag("service", "reminder")
+                    .startManual()
+            fetchAllSpan.setBaggageItem("assistantServiceBaggageItemKey", "assistantServiceBaggageValue")
+
+            val reminders: MutableList<Reminder> = ReminderService.fetchAll(fetchAllSpan)
+            val notes: MutableList<Note> = NotesService.fetchAll(fetchAllSpan)
+            val notesAsJsonString: String = objectMapper.writeValueAsString(AssistantFolder(reminders, notes))
+
+            fetchAllSpan.finish()
             notesAsJsonString
         }
     }
 }
 
 object NotesService {
-    fun fetchAll(): MutableList<Note> {
-        val jsonString: String = get("$noteUrl/notes").jsonArray.toString()
+    fun fetchAll(parentSpan: Span): MutableList<Note> {
+        val fetchNotesSpan: Span = GlobalTracer.get().buildSpan("fetch notes")
+                .withTag("application", "assistant")
+                .withTag("service", "reminder")
+                .asChildOf(parentSpan)
+                .startManual()
+
+        val header: MutableMap<String, String> = mutableMapOf()
+        GlobalTracer.get().inject(fetchNotesSpan.context(), Format.Builtin.HTTP_HEADERS, TextMapInjectAdapter(header))
+
+        header.forEach { key, value ->
+            log.info("assistant service header for calling reminder service: {} = {}", key, value)
+        }
+
+        val jsonString: String = get("$noteUrl/notes", header).jsonArray.toString()
         val notes = objectMapper.readValue(jsonString, Array<Note>::class.java)
+
+        fetchNotesSpan.finish()
+
         return notes.toMutableList()
     }
 }
 
 object ReminderService {
-    fun fetchAll(): MutableList<Reminder> {
-        val jsonString: String = get("$reminderUrl/reminder").jsonArray.toString()
+    fun fetchAll(parentSpan: Span): MutableList<Reminder> {
+        val fetchReminderSpan: Span = GlobalTracer.get().buildSpan("fetch reminder")
+                .withTag("application", "assistant")
+                .withTag("service", "reminder")
+                .asChildOf(parentSpan)
+                .startManual()
+
+        val header: MutableMap<String, String> = mutableMapOf()
+        GlobalTracer.get().inject(fetchReminderSpan.context(), Format.Builtin.HTTP_HEADERS, TextMapInjectAdapter(header))
+
+        header.forEach { key, value ->
+            log.info("assistant service header for calling reminder service: {} = {}", key, value)
+        }
+
+        val jsonString: String = get("$reminderUrl/reminder", header).jsonArray.toString()
         val reminder = objectMapper.readValue(jsonString, Array<Reminder>::class.java)
+
+        fetchReminderSpan.finish()
+
         return reminder.toMutableList()
     }
 }
