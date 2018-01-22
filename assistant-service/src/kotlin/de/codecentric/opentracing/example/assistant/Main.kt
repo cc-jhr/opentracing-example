@@ -51,7 +51,7 @@ fun main(args: Array<String>) {
             val fetchAllSpan: Span = tracer.buildSpan("fetch all")
                     .withTag("application", "assistant")
                     .startManual()
-            fetchAllSpan.setBaggageItem("assistantServiceBaggageItemKey", "assistantServiceBaggageValue")
+            fetchAllSpan.setBaggageItem("process", "showDashboard")
 
             val reminders: MutableList<Reminder> = ReminderService.fetchAll(fetchAllSpan)
             val notes: MutableList<Note> = NotesService.fetchAll(fetchAllSpan)
