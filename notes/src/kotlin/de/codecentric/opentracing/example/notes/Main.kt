@@ -42,18 +42,18 @@ fun main(args: Array<String>) {
 
             val extract = GlobalTracer.get().extract(Format.Builtin.HTTP_HEADERS, TextMapExtractAdapter(header))
 
-            val startManual = GlobalTracer.get()
+            val retrieveNotesSpan = GlobalTracer.get()
                     .buildSpan("retrieve notes from DB")
                     .asChildOf(extract)
                     .withTag("application", "notes")
                     .startManual()
 
             extract.baggageItems().iterator().forEach {
-                startManual.setBaggageItem(it.key, it.value)
+                retrieveNotesSpan.setBaggageItem(it.key, it.value)
             }
 
             val notesAsJsonString: String = objectMapper.writeValueAsString(NoteInMemoryDb.fetchAll().values)
-            startManual.finish()
+            retrieveNotesSpan.finish()
             notesAsJsonString
         }
 
