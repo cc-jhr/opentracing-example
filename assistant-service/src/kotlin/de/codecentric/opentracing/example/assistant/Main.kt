@@ -50,7 +50,6 @@ fun main(args: Array<String>) {
 
             val fetchAllSpan: Span = tracer.buildSpan("fetch all")
                     .withTag("application", "assistant")
-                    .withTag("service", "reminder")
                     .startManual()
             fetchAllSpan.setBaggageItem("assistantServiceBaggageItemKey", "assistantServiceBaggageValue")
 
@@ -68,7 +67,7 @@ object NotesService {
     fun fetchAll(parentSpan: Span): MutableList<Note> {
         val fetchNotesSpan: Span = GlobalTracer.get().buildSpan("fetch notes")
                 .withTag("application", "assistant")
-                .withTag("service", "reminder")
+                .withTag("service", "notes")
                 .asChildOf(parentSpan)
                 .startManual()
 
