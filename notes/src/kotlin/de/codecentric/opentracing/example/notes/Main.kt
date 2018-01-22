@@ -28,7 +28,8 @@ fun main(args: Array<String>) {
                             5775,
                             500,
                             10000)
-            ).tracer)
+            ).tracer
+    )
 
 
     ignite().apply {
@@ -37,7 +38,7 @@ fun main(args: Array<String>) {
         get("/notes") {
             val header: MutableMap<String, String> = mutableMapOf()
             request.raw().headerNames.iterator().forEach {
-                header.put(it, request.headers((it)))
+                header[it] = request.headers((it))
             }
 
             val extract = GlobalTracer.get().extract(Format.Builtin.HTTP_HEADERS, TextMapExtractAdapter(header))
