@@ -1,14 +1,10 @@
 package de.codecentric.opentracing.example.reminder
 
-import brave.Tracing
-import brave.sparkjava.SparkTracing
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import org.slf4j.LoggerFactory
-import spark.Spark.*
 import spark.kotlin.*
-import zipkin2.Endpoint
 import java.time.LocalDateTime
 
 
