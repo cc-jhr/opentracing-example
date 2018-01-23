@@ -1,9 +1,10 @@
 package de.codecentric.opentracing.example.assistant
 
+import brave.Tracing
+import brave.opentracing.BraveTracer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.uber.jaeger.Configuration
 import de.codecentric.opentracing.example.notes.Note
 import io.opentracing.Span
 import io.opentracing.propagation.Format
@@ -12,6 +13,9 @@ import io.opentracing.util.GlobalTracer
 import khttp.get
 import org.slf4j.LoggerFactory
 import spark.kotlin.*
+import zipkin2.reporter.AsyncReporter
+import zipkin2.reporter.Sender
+import zipkin2.reporter.okhttp3.OkHttpSender
 
 private var noteUrl = ""
 private var reminderUrl = ""
@@ -26,19 +30,18 @@ val log = LoggerFactory.getLogger("assistant-logger")
 fun main(args: Array<String>) {
     reminderUrl = args.getOrElse(0, {"http://localhost:8081"})
     noteUrl = args.getOrElse(1, {"http://localhost:8082"})
-    traceCollectorHost = args.getOrElse(2, {"localhost"})
+    traceCollectorHost = args.getOrElse(2, {"localhost:9411"})
+
+
+    val sender: Sender = OkHttpSender.create("http://$traceCollectorHost/api/v2/spans")
 
     GlobalTracer.register(
-            Configuration(
-                    "AssistantService",
-                    Configuration.SamplerConfiguration("const", 1),
-                    Configuration.ReporterConfiguration(
-                            true,
-                            traceCollectorHost,
-                            5775,
-                            500,
-                            10000)
-            ).tracer
+            BraveTracer.create(
+                    Tracing.newBuilder()
+                            .localServiceName("AssistantService")
+                            .spanReporter(AsyncReporter.builder(sender).build())
+                            .build()
+            )
     )
 
     val tracer = GlobalTracer.get()

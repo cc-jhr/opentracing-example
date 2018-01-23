@@ -13,6 +13,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
     <kotlin.version>1.2.20</kotlin.version>
     <jackson.version>2.9.3</jackson.version>
     <opentracing.version>0.31.0</opentracing.version>
+    <zipkin.version>2.3.0</zipkin.version>
   </properties>
 
   <dependencyManagement>
@@ -48,9 +49,19 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
                 <version>${opentracing.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.uber.jaeger</groupId>
-                <artifactId>jaeger-core</artifactId>
-                <version>0.23.0</version>
+                <groupId>io.zipkin.reporter2</groupId>
+                <artifactId>zipkin-reporter</artifactId>
+                <version>${zipkin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.zipkin.reporter2</groupId>
+                <artifactId>zipkin-sender-okhttp3</artifactId>
+                <version>${zipkin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentracing.brave</groupId>
+                <artifactId>brave-opentracing</artifactId>
+                <version>0.25.0</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>

@@ -3,6 +3,6 @@ FROM openjdk:8
 COPY target/notes.jar /usr/local/bin
 WORKDIR /usr/local/bin
 
-CMD ["java", "-jar", "notes.jar", "jaeger"]
+CMD ["java", "-jar", "notes.jar", "zipkin:9411"]
 
 EXPOSE 8082

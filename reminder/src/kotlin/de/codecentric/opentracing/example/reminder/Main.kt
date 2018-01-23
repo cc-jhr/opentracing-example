@@ -1,33 +1,35 @@
 package de.codecentric.opentracing.example.reminder
 
+import brave.Tracing
+import brave.opentracing.BraveTracer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.uber.jaeger.Configuration
 import io.opentracing.propagation.Format
 import io.opentracing.propagation.TextMapExtractAdapter
 import io.opentracing.util.GlobalTracer
 import org.slf4j.LoggerFactory
 import spark.kotlin.*
+import zipkin2.reporter.AsyncReporter
+import zipkin2.reporter.Sender
+import zipkin2.reporter.okhttp3.OkHttpSender
 import java.time.LocalDateTime
 
 
 val log = LoggerFactory.getLogger("reminder-logger")
 
 fun main(args: Array<String>) {
-    val traceCollectorHost = args.getOrElse(0, {"localhost"})
+    val traceCollectorHost = args.getOrElse(0, {"localhost:9411"})
+
+    val sender: Sender = OkHttpSender.create("http://$traceCollectorHost/api/v2/spans")
 
     GlobalTracer.register(
-            Configuration(
-                    "ReminderService",
-                    Configuration.SamplerConfiguration("const", 1),
-                    Configuration.ReporterConfiguration(
-                            true,
-                            traceCollectorHost,
-                            5775,
-                            500,
-                            10000)
-            ).tracer
+            BraveTracer.create(
+                    Tracing.newBuilder()
+                            .localServiceName("ReminderService")
+                            .spanReporter(AsyncReporter.builder(sender).build())
+                            .build()
+            )
     )
 
     val objectMapper = ObjectMapper().apply {

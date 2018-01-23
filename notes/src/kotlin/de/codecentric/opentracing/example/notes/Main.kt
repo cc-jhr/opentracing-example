@@ -1,12 +1,16 @@
 package de.codecentric.opentracing.example.notes
 
+import brave.Tracing
+import brave.opentracing.BraveTracer
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.uber.jaeger.Configuration
 import io.opentracing.propagation.Format
 import io.opentracing.propagation.TextMapExtractAdapter
 import io.opentracing.util.GlobalTracer
 import spark.kotlin.*
 import org.slf4j.LoggerFactory
+import zipkin2.reporter.AsyncReporter
+import zipkin2.reporter.Sender
+import zipkin2.reporter.okhttp3.OkHttpSender
 
 
 private val log = LoggerFactory.getLogger("notes-logger")
@@ -16,22 +20,19 @@ fun main(args: Array<String>) {
     val objectMapper = ObjectMapper()
     NoteInMemoryDb.addNote(Note(null, "Initial note"))
 
-    traceCollectorHost = args.getOrElse(0, {"localhost"})
+    traceCollectorHost = args.getOrElse(0, {"localhost:9411"})
+
+    val sender: Sender = OkHttpSender.create("http://$traceCollectorHost/api/v2/spans")
 
     GlobalTracer.register(
-            Configuration(
-                    "NotesService",
-                    Configuration.SamplerConfiguration("const", 1),
-                    Configuration.ReporterConfiguration(
-                            true,
-                            traceCollectorHost,
-                            5775,
-                            500,
-                            10000)
-            ).tracer
+            BraveTracer.create(
+                    Tracing.newBuilder()
+                            .localServiceName("NotesService")
+                            .spanReporter(AsyncReporter.builder(sender).build())
+                            .build()
+            )
     )
-
-
+    
     ignite().apply {
         port(8082)
 
