@@ -38,7 +38,8 @@ fun main(args: Array<String>) {
                             5775,
                             500,
                             10000)
-            ).tracer)
+            ).tracer
+    )
 
     val tracer = GlobalTracer.get()
 
@@ -50,7 +51,7 @@ fun main(args: Array<String>) {
 
             val fetchAllSpan: Span = tracer.buildSpan("fetch all")
                     .withTag("application", "assistant")
-                    .startManual()
+                    .start()
             fetchAllSpan.setBaggageItem("process", "showDashboard")
 
             val reminders: MutableList<Reminder> = ReminderService.fetchAll(fetchAllSpan)
@@ -69,7 +70,7 @@ object NotesService {
                 .withTag("application", "assistant")
                 .withTag("service", "notes")
                 .asChildOf(parentSpan)
-                .startManual()
+                .start()
 
         val header: MutableMap<String, String> = mutableMapOf()
         GlobalTracer.get().inject(fetchNotesSpan.context(), Format.Builtin.HTTP_HEADERS, TextMapInjectAdapter(header))
@@ -93,7 +94,7 @@ object ReminderService {
                 .withTag("application", "assistant")
                 .withTag("service", "reminder")
                 .asChildOf(parentSpan)
-                .startManual()
+                .start()
 
         val header: MutableMap<String, String> = mutableMapOf()
         GlobalTracer.get().inject(fetchReminderSpan.context(), Format.Builtin.HTTP_HEADERS, TextMapInjectAdapter(header))

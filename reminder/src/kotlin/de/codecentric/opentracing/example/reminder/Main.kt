@@ -53,15 +53,15 @@ fun main(args: Array<String>) {
                     .buildSpan("${requestMethod()} ${request.pathInfo()}")
                     .asChildOf(extract)
                     .withTag("application", "reminder")
-                    .startActive()
+                    .startActive(true)
 
             extract.baggageItems().iterator().forEach {
-                span.setBaggageItem(it.key, it.value)
+                span.span().setBaggageItem(it.key, it.value)
             }
         }
 
         after {
-            GlobalTracer.get().activeSpan().deactivate()
+            GlobalTracer.get().activeSpan().finish()
         }
 
         get("/reminder") {

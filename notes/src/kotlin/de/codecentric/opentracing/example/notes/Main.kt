@@ -47,7 +47,7 @@ fun main(args: Array<String>) {
                     .buildSpan("retrieve notes from DB")
                     .asChildOf(extract)
                     .withTag("application", "notes")
-                    .startManual()
+                    .start()
 
             extract.baggageItems().iterator().forEach {
                 retrieveNotesSpan.setBaggageItem(it.key, it.value)
